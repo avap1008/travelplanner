@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner</title>
+    <!-- 引入活潑字型 (Google Fonts: Nunito for English, Zen Maru Gothic for Chinese) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 引入 FontAwesome 圖標 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 Chart.js 用於圖表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            /* 預設簡潔風格 (Minimalist) */
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --accent-color: #3498db;
+            --accent-hover: #2980b9;
+            --font-family: 'Zen Maru Gothic', 'Nunito', sans-serif;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --transition: all 0.3s ease;
+        }
+
+        /* 繽紛風格 (Fancy) */
+        body.fancy-mode {
+            --bg-color: #ffecd2;
+            background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-primary: #2c3e50;
+            --accent-color: #ff6b6b;
+            --accent-hover: #ee5253;
+            --shadow: 0 8px 15px rgba(0,0,0,0.15);
+            --border-radius: 20px;
+        }
+
+        body.fancy-mode .card {
+            backdrop-filter: blur(10px);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            transition: var(--transition);
+            padding-bottom: 80px; /* For bottom nav */
+            min-height: 100vh;
+        }
+
+        /* Header & Nav */
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-settings {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Common Components */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        h2 { margin-bottom: 15px; font-size: 1.5rem; }
+        h3 { margin-bottom: 10px; font-size: 1.2rem; }
+
+        .btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: var(--transition);
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        /* Overview Specific */
+        .weather-widget {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-switch {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Itinerary Specific */
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            background: var(--accent-color);
+            color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        .time-block { text-align: center; }
+        .time-block span { display: block; font-size: 0.8rem; opacity: 0.8; }
+        .time-block strong { font-size: 1.2rem; }
+
+        .date-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .date-tab {
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 20px;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+
+        .date-tab.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 20px;
+            border-left: 2px solid #ddd;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-color);
+            border-radius: 50%;
+        }
+
+        .timeline-item.transport::before { background: #f1c40f; } /* Yellow for transport */
+
+        .itinerary-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+        }
+
+        .itinerary-card h4 {
+            font-size: 1rem; /* Smaller font as requested */
+            margin-bottom: 5px;
+        }
+        
+        .itinerary-card p {
+            font-size: 0.85rem; /* Smaller font */
+            color: var(--text-secondary);
+        }
+
+        .itinerary-icon {
+            float: right;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .map-preview {
+            background: #eee;
+            height: 100px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .flight-info {
+            background: #e3f2fd;
+            border: 1px dashed #2196f3;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Shopping List Specific */
+        .shopping-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .shopping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background: var(--card-bg);
+        }
+        
+        .shopping-item:first-child { border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
+        .shopping-item:last-child { border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); border-bottom: none; }
+
+        .item-details { flex-grow: 1; }
+        .item-img-container {
+            display: none; /* Hidden by default */
+            margin-top: 10px;
+        }
+        .item-img-container img {
+            max-width: 100px;
+            border-radius: 8px;
+        }
+        .shopping-item.expanded .item-img-container { display: block; }
+        .shopping-item.expanded { background: #f9f9f9; }
+
+        /* Expenses Specific */
+        .budget-overview {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .budget-chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* To-Do List Specific */
+        .todo-section { margin-bottom: 25px; }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+        .todo-item input[type="checkbox"] { transform: scale(1.2); }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 400px;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: var(--font-family);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1 style="font-size: 1.2rem;">Travel Planner</h1>
+        <div class="user-settings" onclick="promptUserName()">
+            <span id="display-username">訪客</span>
+            <i class="fa-solid fa-gear"></i>
+        </div>
+    </header>
+
+    <!-- 1. Overview View -->
+    <div id="view-overview" class="view active">
+        <div class="card weather-widget">
+            <div>
+                <h3>東京, 日本</h3>
+                <p>22°C 晴朗</p>
+            </div>
+            <i class="fa-solid fa-sun" style="font-size: 2rem; color: #f39c12;"></i>
+        </div>
+
+        <div class="card">
+            <h3>下次旅程</h3>
+            <div class="itinerary-card">
+                <i class="fa-solid fa-plane itinerary-icon"></i>
+                <h4>東京賞櫻之旅</h4>
+                <p>2023/10/25 - 2023/10/30</p>
+                <p style="font-size: 0.8rem; margin-top: 5px;">還有 3 天出發</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>界面風格</h3>
+            <div class="theme-switch">
+                <button class="btn" onclick="setTheme('minimal')">簡潔 (Minimal)</button>
+                <button class="btn btn-outline" onclick="setTheme('fancy')">繽紛 (Fancy)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Itinerary View -->
+    <div id="view-itinerary" class="view">
+        <div class="time-display">
+            <div class="time-block">
+                <span>香港 (HKG)</span>
+                <strong id="time-hkg">10:00</strong>
+                <span id="date-hkg">10/22</span>
+            </div>
+            <div class="time-block">
+                <i class="fa-solid fa-plane"></i>
+            </div>
+            <div class="time-block">
+                <span>東京 (NRT)</span>
+                <strong id="time-local">11:00</strong>
+                <span id="date-local">10/22</span>
+            </div>
+        </div>
+
+        <div class="date-tabs" id="date-tabs">
+            <!-- JS Generated Tabs -->
+        </div>
+
+        <div id="daily-timeline">
+            <!-- JS Generated Timeline -->
+        </div>
+
+        <button class="btn" style="width: 100%; margin-top: 20px;" onclick="openAddItineraryModal()">
+            <i class="fa-solid fa-plus"></i> 新增行程 / 航班 / 移動
+        </button>
+    </div>
+
+    <!-- 3. Shopping List View -->
+    <div id="view-shopping" class="view">
+        <div class="shopping-controls">
+            <select id="shopping-sort" onchange="renderShoppingList()" style="padding: 5px; border-radius: 5px;">
+                <option value="status">按狀態排序</option>
+                <option value="location">按地點排序</option>
+            </select>
+            <button class="btn" style="padding: 5px 10px; font-size: 0.8rem;" onclick="openAddShoppingModal()">
+                <i class="fa-solid fa-plus"></i> 新增
+            </button>
+        </div>
+
+        <div id="shopping-list-container">
+            <!-- JS Generated List -->
+        </div>
+    </div>
+
+    <!-- 4. Expenses View -->
+    <div id="view-expenses" class="view">
+        <div class="card budget-overview">
+            <h3>預算概況</h3>
+            <div class="budget-chart-container">
+                <canvas id="budgetChart"></canvas>
+            </div>
+            <div style="margin-top: 15px;">
+                <p>總預算: <span id="total-budget-display">$15,000</span></p>
+                <p>已使用: <span id="used-budget-display" style="color: #e74c3c;">$4,200</span></p>
+                <button class="btn btn-outline" style="margin-top: 10px; font-size: 0.8rem;" onclick="updateBudget()">修改預算</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>新增支出</h3>
+            <div class="form-group">
+                <input type="number" placeholder="金額 (HKD)" id="expense-amount">
+            </div>
+            <div class="form-group">
+                <select id="expense-category">
+                    <option value="transport">交通</option>
+                    <option value="food">飲食</option>
+                    <option value="daily">日用品</option>
+                    <option value="clothes">衣服</option>
+                    <option value="souvenir">手信</option>
+                    <option value="ticket">門票</option>
+                    <option value="gift">禮物</option>
+                </select>
+            </div>
+            <button class="btn" onclick="addExpense()">記帳</button>
+        </div>
+    </div>
+
+    <!-- 5. To-Do View -->
+    <div id="view-todo" class="view">
+        <div class="card todo-section">
+            <h3><i class="fa-solid fa-suitcase"></i> 行李清單 (自動生成)</h3>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">根據東京天氣(22°C)及行程生成</p>
+            <div id="luggage-list">
+                <!-- JS Generated -->
+            </div>
+        </div>
+
+        <div class="card todo-section">
+            <h3><i class="fa-solid fa-clipboard-check"></i> 出發前 To-Do</h3>
+            <div id="pre-trip-list">
+                <!-- JS Generated -->
+            </div>
+        </div>
+        
+        <div class="form-group" style="display: flex; gap: 10px;">
+            <input type="text" id="new-todo-input" placeholder="新增待辦事項...">
+            <button class="btn" onclick="addNewTodo()">+</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchView('overview', this)">
+            <i class="fa-solid fa-house"></i> 總覽
+        </div>
+        <div class="nav-item" onclick="switchView('itinerary', this)">
+            <i class="fa-solid fa-calendar-days"></i> 行程
+        </div>
+        <div class="nav-item" onclick="switchView('shopping', this)">
+            <i class="fa-solid fa-cart-shopping"></i> 購物
+        </div>
+        <div class="nav-item" onclick="switchView('expenses', this)">
+            <i class="fa-solid fa-wallet"></i> 支出
+        </div>
+        <div class="nav-item" onclick="switchView('todo', this)">
+            <i class="fa-solid fa-list-check"></i> 待辦
+        </div>
+    </nav>
+
+    <!-- Modals -->
+    <!-- Add Itinerary Modal -->
+    <div id="modal-itinerary" class="modal">
+        <div class="modal-content">
+            <h3>新增項目</h3>
+            <div class="form-group">
+                <label>類型</label>
+                <select id="itinerary-type" onchange="toggleItineraryFields()">
+                    <option value="activity">活動/景點</option>
+                    <option value="flight">航班</option>
+                    <option value="transport">移動方式</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>時間</label>
+                <input type="time" id="itinerary-time" value="10:00">
+            </div>
+            
+            <!-- Activity Fields -->
+            <div id="field-activity">
+                <div class="form-group">
+                    <label>名稱</label>
+                    <input type="text" id="itinerary-name" placeholder="例如：淺草寺">
+                </div>
+                <div class="form-group">
+                    <label>地址 (Google Map Preview)</label>
+                    <input type="text" id="itinerary-address" placeholder="輸入地址...">
+                </div>
+            </div>
+
+            <!-- Flight Fields -->
+            <div id="field-flight" style="display:none;">
+                <div class="form-group">
+                    <label>航班編號</label>
+                    <input type="text" placeholder="CX500">
+                </div>
+                <div class="form-group">
+                    <label>航廈/閘口</label>
+                    <input type="text" placeholder="T1 / Gate 23">
+                </div>
+            </div>
+
+            <!-- Transport Fields -->
+            <div id="field-transport" style="display:none;">
+                <div class="form-group">
+                    <label>交通工具</label>
+                    <select>
+                        <option>JR 鐵路</option>
+                        <option>地鐵</option>
+                        <option>巴士</option>
+                        <option>的士</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>起點 -> 終點</label>
+                    <input type="text" placeholder="新宿 -> 澀谷">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="saveItinerary()">儲存</button>
+                <button class="btn btn-outline" onclick="closeModal('modal-itinerary')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal (AI Intro) -->
+    <div id="modal-detail" class="modal">
+        <div class="modal-content">
+            <h3 id="detail-title">地點名稱</h3>
+            <div style="background: #e8f4f8; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <i class="fa-solid fa-robot"></i> <strong>Google AI 介紹:</strong>
+                <p style="font-size: 0.9rem; margin-top: 5px;">這是一個熱門的旅遊景點，以其歷史建築和美食聞名。建議預留 2 小時參觀。</p>
+            </div>
+            <div class="map-preview">Google Map Preview</div>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 15px;" onclick="closeModal('modal-detail')">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Global State ---
+        let username = "用戶";
+        let currentTheme = "minimal";
+        let budget = 15000;
+        let expenses = 4200;
+        
+        // Mock Data
+        const itineraryData = {
+            "2023-10-25": [
+                { type: "flight", time: "09:00", title: "HKG -> NRT (CX500)", terminal: "T1", gate: "23", status: "On Time" },
+                { type: "transport", time: "15:00", title: "成田機場 -> 新宿 (N'EX)", from: "Airport", to: "Shinjuku" },
+                { type: "activity", time: "17:00", title: "Check-in 酒店", address: "Shinjuku Prince Hotel", category: "hotel" },
+                { type: "activity", time: "19:00", title: "歌舞伎町晚餐", address: "Kabukicho", category: "food" }
+            ],
+            "2023-10-26": [
+                { type: "activity", time: "10:00", title: "淺草寺參拜", address: "Asakusa", category: "sightseeing" },
+                { type: "transport", time: "13:00", title: "淺草 -> 晴空塔 (地鐵)", from: "Asakusa", to: "Skytree" },
+                { type: "activity", time: "14:00", title: "晴空塔購物", address: "Skytree Town", category: "shopping" }
+            ]
+        };
+
+        const shoppingList = [
+            { id: 1, name: "Tokyo Banana", price: 1200, currency: "JPY", location: "機場", status: "bought", img: "https://via.placeholder.com/100?text=Banana" },
+            { id: 2, name: "藥妝 (防曬)", price: 0, currency: "JPY", location: "松本清", status: "pending", img: "" },
+            { id: 3, name: "Uniqlo T-shirt", price: 1500, currency: "JPY", location: "銀座", status: "bought", img: "https://via.placeholder.com/100?text=Shirt" }
+        ];
+
+        const todoData = {
+            luggage: ["護照", "日元現金", "萬能插蘇", "薄外套", "雨傘"],
+            preTrip: ["買旅遊保險", "網上 Check-in", "預約 Wifi 蛋"]
+        };
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTime();
+            setInterval(updateTime, 60000);
+            renderDateTabs();
+            renderTimeline("2023-10-25"); // Default to first day
+            renderShoppingList();
+            renderTodoList();
+            initChart();
+            
+            // Check if today is in trip
+            const today = new Date().toISOString().split('T')[0];
+            if(itineraryData[today]) {
+                renderTimeline(today);
+                document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
+                // Logic to highlight today's tab would go here
+            }
+        });
+
+        // --- Navigation ---
+        function switchView(viewId, navElement) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            navElement.classList.add('active');
+        }
+
+        // --- Settings & Theme ---
+        function promptUserName() {
+            const newName = prompt("請輸入您的名稱:", username);
+            if (newName) {
+                username = newName;
+                document.getElementById('display-username').innerText = username;
+            }
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.className = theme === 'fancy' ? 'fancy-mode' : '';
+            // Re-render chart to match theme colors if needed
+        }
+
+        // --- Time ---
+        function updateTime() {
+            const now = new Date();
+            
+            // HK Time
+            const hkTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Hong_Kong' });
+            const hkDate = now.toLocaleDateString('zh-HK', { month: '2-digit', day: '2-digit', timeZone: 'Asia/Hong_Kong' });
+            document.getElementById('time-hkg').innerText = hkTime;
+            document.getElementById('date-hkg').innerText = hkDate;
+
+            // Local Time (Simulated as Tokyo +1 hour from HK)
+            const localDateObj = new Date(now.getTime() + (1 * 60 * 60 * 1000)); 
+            const localTime = localDateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }); // Simplified
+            const localDate = localDateObj.toLocaleDateString('zh-HK', { month: '2-digit', day: '2-digit', timeZone: 'UTC' });
+            document.getElementById('time-local').innerText = localTime;
+            document.getElementById('date-local').innerText = localDate;
+        }
+
+        // --- Itinerary Logic ---
+        function renderDateTabs() {
+            const container = document.getElementById('date-tabs');
+            container.innerHTML = '';
+            Object.keys(itineraryData).forEach((date, index) => {
+                const div = document.createElement('div');
+                div.className = `date-tab ${index === 0 ? 'active' : ''}`;
+                div.innerText = `Day ${index + 1} (${date.slice(5)})`;
+                div.onclick = () => {
+                    document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
+                    div.classList.add('active');
+                    renderTimeline(date);
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function renderTimeline(date) {
+            const container = document.getElementById('daily-timeline');
+            container.innerHTML = '';
+            const items = itineraryData[date] || [];
+
+            if (items.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">本日無行程</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                let iconClass = "fa-location-dot";
+                let extraInfo = "";
+                let itemClass = "timeline-item";
+
+                if (item.type === 'flight') {
+                    iconClass = "fa-plane-departure";
+                    extraInfo = `<div class="flight-info">
+                        <strong>${item.status}</strong><br>
+                        閘口: ${item.gate} | Term: ${item.terminal}
+                    </div>`;
+                } else if (item.type === 'transport') {
+                    iconClass = "fa-train-subway";
+                    itemClass += " transport";
+                } else if (item.category === 'food') iconClass = "fa-utensils";
+                else if (item.category === 'shopping') iconClass = "fa-bag-shopping";
+                else if (item.category === 'hotel') iconClass = "fa-bed";
+
+                const div = document.createElement('div');
+                div.className = itemClass;
+                div.innerHTML = `
+                    <div class="itinerary-card" onclick="${item.type === 'activity' ? "openDetailModal('"+item.title+"')" : ""}">
+                        <i class="fa-solid ${iconClass} itinerary-icon"></i>
+                        <h4>${item.time} ${item.title}</h4>
+                        ${extraInfo}
+                        ${item.address ? `<p><i class="fa-solid fa-map-pin"></i> ${item.address}</p>` : ''}
+                        ${item.address ? `<div class="map-preview">Google Map Preview</div>` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleItineraryFields() {
+            const type = document.getElementById('itinerary-type').value;
+            document.getElementById('field-activity').style.display = type === 'activity' ? 'block' : 'none';
+            document.getElementById('field-flight').style.display = type === 'flight' ? 'block' : 'none';
+            document.getElementById('field-transport').style.display = type === 'transport' ? 'block' : 'none';
+        }
+
+        function openAddItineraryModal() {
+            document.getElementById('modal-itinerary').style.display = 'flex';
+        }
+        
+        function openDetailModal(title) {
+            document.getElementById('detail-title').innerText = title;
+            document.getElementById('modal-detail').style.display = 'flex';
+        }
+
+        function saveItinerary() {
+            alert("行程已新增 (前端演示)");
+            closeModal('modal-itinerary');
+            // Logic to add to itineraryData would go here
+            // Also trigger auto-generate todo item
+            addNewTodoItem("luggage", "根據新行程建議物品");
+        }
+
+        // --- Shopping List Logic ---
+        function renderShoppingList() {
+            const container = document.getElementById('shopping-list-container');
+            const sortType = document.getElementById('shopping-sort').value;
+            container.innerHTML = '';
+
+            let sortedList = [...shoppingList];
+            if (sortType === 'status') {
+                sortedList.sort((a, b) => (a.status === 'bought' ? 1 : -1));
+            } else if (sortType === 'location') {
+                sortedList.sort((a, b) => a.location.localeCompare(b.location));
+            }
+
+            sortedList.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `shopping-item ${item.status === 'bought' ? 'bought' : ''}`;
+                div.onclick = (e) => {
+                    // Toggle expand only if bought to show image
+                    if(item.status === 'bought') {
+                        div.classList.toggle('expanded');
+                    }
+                };
+
+                const statusIcon = item.status === 'bought' ? '<i class="fa-solid fa-circle-check" style="color:green"></i>' : '<i class="fa-regular fa-circle"></i>';
+                
+                div.innerHTML = `
+                    <div style="margin-right: 15px;">${statusIcon}</div>
+                    <div class="item-details">
+                        <strong>${item.name}</strong>
+                        <div style="font-size: 0.8rem; color: #666;">
+                            <i class="fa-solid fa-location-dot"></i> ${item.location} | 
+                            ${item.price > 0 ? item.price + ' ' + item.currency : '未定價'}
+                        </div>
+                        <div class="item-img-container">
+                            <img src="${item.img}" alt="item">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function openAddShoppingModal() {
+            const name = prompt("輸入物品名稱:");
+            if(name) {
+                shoppingList.push({
+                    id: Date.now(),
+                    name: name,
+                    price: 0,
+                    currency: "HKD",
+                    location: "未分類",
+                    status: "pending",
+                    img: ""
+                });
+                renderShoppingList();
+            }
+        }
+
+        // --- Expenses Logic ---
+        let budgetChart;
+        function initChart() {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            budgetChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['已使用', '剩餘'],
+                    datasets: [{
+                        data: [expenses, budget - expenses],
+                        backgroundColor: ['#e74c3c', '#2ecc71'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function updateBudget() {
+            const newBudget = prompt("輸入總預算:", budget);
+            if(newBudget && !isNaN(newBudget)) {
+                budget = parseInt(newBudget);
+                document.getElementById('total-budget-display').innerText = "$" + budget.toLocaleString();
+                updateChart();
+            }
+        }
+
+        function addExpense() {
+            const amount = parseInt(document.getElementById('expense-amount').value);
+            if(amount) {
+                expenses += amount;
+                document.getElementById('used-budget-display').innerText = "$" + expenses.toLocaleString();
+                document.getElementById('expense-amount').value = '';
+                updateChart();
+                alert("已記帳");
+            }
+        }
+
+        function updateChart() {
+            budgetChart.data.datasets[0].data = [expenses, budget - expenses];
+            budgetChart.update();
+        }
+
+        // --- To-Do List Logic ---
+        function renderTodoList() {
+            const luggageContainer = document.getElementById('luggage-list');
+            luggageContainer.innerHTML = todoData.luggage.map(item => createTodoHTML(item)).join('');
+
+            const preTripContainer = document.getElementById('pre-trip-list');
+            preTripContainer.innerHTML = todoData.preTrip.map(item => createTodoHTML(item)).join('');
+        }
+
+        function createTodoHTML(text) {
+            return `
+                <div class="todo-item">
+                    <input type="checkbox">
+                    <span>${text}</span>
+                </div>
+            `;
+        }
+
+        function addNewTodo() {
+            const input = document.getElementById('new-todo-input');
+            if(input.value) {
+                addNewTodoItem('preTrip', input.value); // Default add to pre-trip
+                input.value = '';
+            }
+        }
+
+        function addNewTodoItem(category, text) {
+            const container = category === 'luggage' ? document.getElementById('luggage-list') : document.getElementById('pre-trip-list');
+            const div = document.createElement('div');
+            div.className = 'todo-item';
+            div.innerHTML = `<input type="checkbox"><span>${text}</span>`;
+            container.appendChild(div);
+        }
+
+        // --- Utils ---
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
