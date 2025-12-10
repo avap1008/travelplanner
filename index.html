@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Planner</title>
-    <!-- 引入活潑字型 (Google Fonts: Nunito for English, Zen Maru Gothic for Chinese) -->
+    <!-- 引入活潑字型 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
-    <!-- 引入 FontAwesome 圖標 -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 引入 Chart.js 用於圖表 -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -26,45 +26,93 @@
             --border-radius: 12px;
             --shadow: 0 4px 6px rgba(0,0,0,0.05);
             --transition: all 0.3s ease;
+            --nav-bg: #ffffff;
         }
 
-        /* 繽紛風格 (Fancy) */
+        /* 繽紛風格 (Fancy) - 增強版 */
         body.fancy-mode {
-            --bg-color: #ffecd2;
-            background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --text-primary: #2c3e50;
+            --bg-color: #ff9a9e; /* Fallback */
+            /* 動態漸變背景 */
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-primary: #4a4a4a;
             --accent-color: #ff6b6b;
             --accent-hover: #ee5253;
-            --shadow: 0 8px 15px rgba(0,0,0,0.15);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
             --border-radius: 20px;
+            --nav-bg: rgba(255, 255, 255, 0.9);
         }
 
-        body.fancy-mode .card {
-            backdrop-filter: blur(10px);
-            animation: float 6s ease-in-out infinite;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0px); }
+        body.fancy-mode .card, body.fancy-mode .bottom-nav {
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--font-family);
             background-color: var(--bg-color);
             color: var(--text-primary);
             transition: var(--transition);
-            padding-bottom: 80px; /* For bottom nav */
+            padding-bottom: 80px;
             min-height: 100vh;
         }
+
+        /* Login Screen */
+        #login-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .login-card h2 { margin-bottom: 20px; color: #333; }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+            font-size: 1rem;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover { background: #5b3a7d; }
+        .error-msg { color: red; font-size: 0.8rem; margin-top: 10px; display: none; }
 
         /* Header & Nav */
         header {
@@ -84,13 +132,16 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
+            background: rgba(0,0,0,0.05);
+            padding: 5px 10px;
+            border-radius: 20px;
         }
 
         .bottom-nav {
             position: fixed;
             bottom: 0;
             width: 100%;
-            background: var(--card-bg);
+            background: var(--nav-bg);
             display: flex;
             justify-content: space-around;
             padding: 15px 0;
@@ -111,11 +162,7 @@
             transform: scale(1.1);
         }
 
-        .nav-item i {
-            font-size: 1.2rem;
-            display: block;
-            margin-bottom: 4px;
-        }
+        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 4px; }
 
         /* Views */
         .view {
@@ -125,17 +172,10 @@
             margin: 0 auto;
             animation: fadeIn 0.5s ease;
         }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .view.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Common Components */
+        /* Components */
         .card {
             background: var(--card-bg);
             border-radius: var(--border-radius);
@@ -157,9 +197,7 @@
             font-family: var(--font-family);
             transition: var(--transition);
         }
-
         .btn:hover { background: var(--accent-hover); }
-        
         .btn-outline {
             background: transparent;
             border: 2px solid var(--accent-color);
@@ -171,28 +209,47 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+            color: white;
         }
+        .weather-widget h3, .weather-widget p { color: white; }
 
-        .theme-switch {
-            margin-top: 10px;
+        .trips-container {
             display: flex;
-            gap: 10px;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 10px;
+        }
+        .trip-card {
+            min-width: 200px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        .add-trip-card {
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+            background: transparent;
+            cursor: pointer;
         }
 
         /* Itinerary Specific */
-        .time-display {
-            display: flex;
-            justify-content: space-between;
+        .dest-header {
             background: var(--accent-color);
             color: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: var(--border-radius);
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-
-        .time-block { text-align: center; }
-        .time-block span { display: block; font-size: 0.8rem; opacity: 0.8; }
-        .time-block strong { font-size: 1.2rem; }
 
         .date-tabs {
             display: flex;
@@ -201,7 +258,6 @@
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
-
         .date-tab {
             background: var(--card-bg);
             padding: 10px 15px;
@@ -210,7 +266,6 @@
             cursor: pointer;
             border: 1px solid #ddd;
         }
-
         .date-tab.active {
             background: var(--accent-color);
             color: white;
@@ -223,43 +278,26 @@
             margin-bottom: 20px;
             border-left: 2px solid #ddd;
         }
-
         .timeline-item::before {
             content: '';
             position: absolute;
-            left: -6px;
-            top: 0;
-            width: 10px;
-            height: 10px;
+            left: -6px; top: 0;
+            width: 10px; height: 10px;
             background: var(--accent-color);
             border-radius: 50%;
         }
-
-        .timeline-item.transport::before { background: #f1c40f; } /* Yellow for transport */
+        .timeline-item.transport::before { background: #f1c40f; }
 
         .itinerary-card {
             background: var(--card-bg);
-            padding: 15px;
+            padding: 12px 15px; /* Compact padding */
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             cursor: pointer;
         }
-
-        .itinerary-card h4 {
-            font-size: 1rem; /* Smaller font as requested */
-            margin-bottom: 5px;
-        }
-        
-        .itinerary-card p {
-            font-size: 0.85rem; /* Smaller font */
-            color: var(--text-secondary);
-        }
-
-        .itinerary-icon {
-            float: right;
-            font-size: 1.2rem;
-            color: var(--accent-color);
-        }
+        .itinerary-card h4 { font-size: 1rem; margin-bottom: 5px; }
+        .itinerary-card p { font-size: 0.85rem; color: var(--text-secondary); }
+        .itinerary-icon { float: right; font-size: 1.2rem; color: var(--accent-color); }
 
         .map-preview {
             background: #eee;
@@ -272,68 +310,41 @@
             color: #888;
             font-size: 0.8rem;
         }
-
         .flight-info {
             background: #e3f2fd;
             border: 1px dashed #2196f3;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
         }
 
-        /* Shopping List Specific */
-        .shopping-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
+        /* Shopping List */
+        .shopping-controls { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .shopping-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             padding: 15px;
             border-bottom: 1px solid #eee;
             background: var(--card-bg);
         }
-        
+        .shopping-item.bought { opacity: 0.7; background: #f0f0f0; }
         .shopping-item:first-child { border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); }
         .shopping-item:last-child { border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); border-bottom: none; }
-
-        .item-details { flex-grow: 1; }
-        .item-img-container {
-            display: none; /* Hidden by default */
-            margin-top: 10px;
-        }
-        .item-img-container img {
-            max-width: 100px;
-            border-radius: 8px;
-        }
+        
+        .item-img-container { display: none; margin-top: 10px; }
+        .item-img-container img { max-width: 100px; border-radius: 8px; }
         .shopping-item.expanded .item-img-container { display: block; }
-        .shopping-item.expanded { background: #f9f9f9; }
-
-        /* Expenses Specific */
-        .budget-overview {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .budget-chart-container {
-            position: relative;
-            height: 200px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
+        
+        /* Expenses */
+        .budget-chart-container { position: relative; height: 200px; width: 100%; display: flex; justify-content: center; }
+        .expense-row {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
         }
 
-        /* To-Do List Specific */
-        .todo-section { margin-bottom: 25px; }
-        .todo-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-        }
+        /* To-Do */
+        .todo-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
         .todo-item input[type="checkbox"] { transform: scale(1.2); }
 
         /* Modal */
@@ -352,74 +363,89 @@
             border-radius: var(--border-radius);
             width: 90%;
             max-width: 400px;
+            animation: fadeIn 0.3s;
         }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
         .form-group input, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            width: 100%; padding: 10px;
+            border: 1px solid #ddd; border-radius: 8px;
             font-family: var(--font-family);
         }
-
     </style>
 </head>
 <body>
 
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2><i class="fa-solid fa-plane-departure"></i> 歡迎回來</h2>
+            <input type="text" id="login-acc" class="login-input" placeholder="帳號">
+            <input type="password" id="login-pw" class="login-input" placeholder="密碼">
+            <button class="login-btn" onclick="checkLogin()">登入</button>
+            <p id="login-error" class="error-msg">帳號或密碼錯誤</p>
+        </div>
+    </div>
+
     <!-- Header -->
     <header>
         <h1 style="font-size: 1.2rem;">Travel Planner</h1>
-        <div class="user-settings" onclick="promptUserName()">
-            <span id="display-username">訪客</span>
+        <div class="user-settings" onclick="openSettingsModal()">
+            <span id="display-username">用戶</span>
             <i class="fa-solid fa-gear"></i>
         </div>
     </header>
 
     <!-- 1. Overview View -->
     <div id="view-overview" class="view active">
+        <!-- HK Weather Widget -->
         <div class="card weather-widget">
             <div>
-                <h3>東京, 日本</h3>
-                <p>22°C 晴朗</p>
+                <p style="font-size: 0.8rem; opacity: 0.9;">目前位置</p>
+                <h3>香港, HK</h3>
+                <p id="hk-weather-info">28°C 多雲</p>
             </div>
-            <i class="fa-solid fa-sun" style="font-size: 2rem; color: #f39c12;"></i>
-        </div>
-
-        <div class="card">
-            <h3>下次旅程</h3>
-            <div class="itinerary-card">
-                <i class="fa-solid fa-plane itinerary-icon"></i>
-                <h4>東京賞櫻之旅</h4>
-                <p>2023/10/25 - 2023/10/30</p>
-                <p style="font-size: 0.8rem; margin-top: 5px;">還有 3 天出發</p>
+            <div style="text-align: right;">
+                <h2 id="hk-time-big" style="margin:0;">10:00</h2>
+                <p id="hk-date-small">10/22</p>
             </div>
         </div>
 
-        <div class="card">
-            <h3>界面風格</h3>
-            <div class="theme-switch">
-                <button class="btn" onclick="setTheme('minimal')">簡潔 (Minimal)</button>
-                <button class="btn btn-outline" onclick="setTheme('fancy')">繽紛 (Fancy)</button>
+        <!-- Trips Carousel -->
+        <div style="margin-bottom: 20px;">
+            <h3>我的旅程</h3>
+            <div class="trips-container">
+                <div class="trip-card" onclick="switchView('itinerary', document.querySelectorAll('.nav-item')[1])">
+                    <div style="position: absolute; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">3 天後</div>
+                    <h4><i class="fa-solid fa-torii-gate"></i> 東京賞櫻</h4>
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">2023/10/25 - 10/30</p>
+                    <p style="font-size: 0.8rem; margin-top: 10px;">進度: 規劃中</p>
+                </div>
+                <div class="trip-card">
+                    <h4><i class="fa-solid fa-umbrella-beach"></i> 泰國潑水節</h4>
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">2024/04/13 - 04/16</p>
+                    <p style="font-size: 0.8rem; margin-top: 10px;">進度: 草稿</p>
+                </div>
+                <div class="trip-card add-trip-card" onclick="alert('新增旅程功能')">
+                    <i class="fa-solid fa-plus" style="font-size: 1.5rem; color: #ccc;"></i>
+                    <span style="font-size: 0.8rem; color: #999; margin-top: 5px;">新增旅程</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 2. Itinerary View -->
     <div id="view-itinerary" class="view">
-        <div class="time-display">
-            <div class="time-block">
-                <span>香港 (HKG)</span>
-                <strong id="time-hkg">10:00</strong>
-                <span id="date-hkg">10/22</span>
+        <!-- Destination Header -->
+        <div class="dest-header">
+            <div>
+                <p style="font-size: 0.8rem; opacity: 0.9;">目的地：東京 (Tokyo)</p>
+                <h2 id="dest-time" style="margin: 5px 0;">11:00</h2>
+                <p id="dest-date">10月22日 週日</p>
             </div>
-            <div class="time-block">
-                <i class="fa-solid fa-plane"></i>
-            </div>
-            <div class="time-block">
-                <span>東京 (NRT)</span>
-                <strong id="time-local">11:00</strong>
-                <span id="date-local">10/22</span>
+            <div style="text-align: center;">
+                <i class="fa-solid fa-cloud-sun" style="font-size: 2.5rem;"></i>
+                <p style="margin-top: 5px;">22°C</p>
             </div>
         </div>
 
@@ -440,7 +466,7 @@
     <div id="view-shopping" class="view">
         <div class="shopping-controls">
             <select id="shopping-sort" onchange="renderShoppingList()" style="padding: 5px; border-radius: 5px;">
-                <option value="status">按狀態排序</option>
+                <option value="status">按狀態排序 (未買優先)</option>
                 <option value="location">按地點排序</option>
             </select>
             <button class="btn" style="padding: 5px 10px; font-size: 0.8rem;" onclick="openAddShoppingModal()">
@@ -460,7 +486,7 @@
             <div class="budget-chart-container">
                 <canvas id="budgetChart"></canvas>
             </div>
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 15px; text-align: center;">
                 <p>總預算: <span id="total-budget-display">$15,000</span></p>
                 <p>已使用: <span id="used-budget-display" style="color: #e74c3c;">$4,200</span></p>
                 <button class="btn btn-outline" style="margin-top: 10px; font-size: 0.8rem;" onclick="updateBudget()">修改預算</button>
@@ -469,21 +495,23 @@
 
         <div class="card">
             <h3>新增支出</h3>
-            <div class="form-group">
-                <input type="number" placeholder="金額 (HKD)" id="expense-amount">
-            </div>
-            <div class="form-group">
-                <select id="expense-category">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="number" placeholder="金額" id="expense-amount" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                <select id="expense-category" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
                     <option value="transport">交通</option>
                     <option value="food">飲食</option>
                     <option value="daily">日用品</option>
-                    <option value="clothes">衣服</option>
-                    <option value="souvenir">手信</option>
                     <option value="ticket">門票</option>
-                    <option value="gift">禮物</option>
                 </select>
             </div>
-            <button class="btn" onclick="addExpense()">記帳</button>
+            <button class="btn" style="width: 100%;" onclick="addExpense()">記帳</button>
+        </div>
+
+        <div class="card">
+            <h3>最近支出</h3>
+            <div id="expense-history-list">
+                <!-- JS Generated -->
+            </div>
         </div>
     </div>
 
@@ -492,16 +520,12 @@
         <div class="card todo-section">
             <h3><i class="fa-solid fa-suitcase"></i> 行李清單 (自動生成)</h3>
             <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">根據東京天氣(22°C)及行程生成</p>
-            <div id="luggage-list">
-                <!-- JS Generated -->
-            </div>
+            <div id="luggage-list"></div>
         </div>
 
         <div class="card todo-section">
             <h3><i class="fa-solid fa-clipboard-check"></i> 出發前 To-Do</h3>
-            <div id="pre-trip-list">
-                <!-- JS Generated -->
-            </div>
+            <div id="pre-trip-list"></div>
         </div>
         
         <div class="form-group" style="display: flex; gap: 10px;">
@@ -530,6 +554,26 @@
     </nav>
 
     <!-- Modals -->
+    
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="modal">
+        <div class="modal-content">
+            <h3>設定</h3>
+            <div class="form-group">
+                <label>用戶名稱</label>
+                <input type="text" id="setting-username-input" placeholder="輸入名稱">
+            </div>
+            <div class="form-group">
+                <label>界面風格</label>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" style="flex:1; background: #ddd; color: #333;" onclick="setTheme('minimal')">簡潔</button>
+                    <button class="btn" style="flex:1; background: linear-gradient(45deg, #ff9a9e, #fad0c4); color: white;" onclick="setTheme('fancy')">繽紛</button>
+                </div>
+            </div>
+            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="saveSettings()">儲存並關閉</button>
+        </div>
+    </div>
+
     <!-- Add Itinerary Modal -->
     <div id="modal-itinerary" class="modal">
         <div class="modal-content">
@@ -547,7 +591,6 @@
                 <input type="time" id="itinerary-time" value="10:00">
             </div>
             
-            <!-- Activity Fields -->
             <div id="field-activity">
                 <div class="form-group">
                     <label>名稱</label>
@@ -559,7 +602,6 @@
                 </div>
             </div>
 
-            <!-- Flight Fields -->
             <div id="field-flight" style="display:none;">
                 <div class="form-group">
                     <label>航班編號</label>
@@ -571,7 +613,6 @@
                 </div>
             </div>
 
-            <!-- Transport Fields -->
             <div id="field-transport" style="display:none;">
                 <div class="form-group">
                     <label>交通工具</label>
@@ -579,7 +620,6 @@
                         <option>JR 鐵路</option>
                         <option>地鐵</option>
                         <option>巴士</option>
-                        <option>的士</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -595,7 +635,7 @@
         </div>
     </div>
 
-    <!-- Item Detail Modal (AI Intro) -->
+    <!-- Detail Modal -->
     <div id="modal-detail" class="modal">
         <div class="modal-content">
             <h3 id="detail-title">地點名稱</h3>
@@ -633,7 +673,14 @@
         const shoppingList = [
             { id: 1, name: "Tokyo Banana", price: 1200, currency: "JPY", location: "機場", status: "bought", img: "https://via.placeholder.com/100?text=Banana" },
             { id: 2, name: "藥妝 (防曬)", price: 0, currency: "JPY", location: "松本清", status: "pending", img: "" },
-            { id: 3, name: "Uniqlo T-shirt", price: 1500, currency: "JPY", location: "銀座", status: "bought", img: "https://via.placeholder.com/100?text=Shirt" }
+            { id: 3, name: "Uniqlo T-shirt", price: 1500, currency: "JPY", location: "銀座", status: "bought", img: "https://via.placeholder.com/100?text=Shirt" },
+            { id: 4, name: "抹茶粉", price: 0, currency: "JPY", location: "宇治", status: "pending", img: "" }
+        ];
+
+        const expenseHistory = [
+            { name: "機票 (CX)", amount: 3500, category: "transport" },
+            { name: "酒店訂金", amount: 500, category: "daily" },
+            { name: "網卡", amount: 200, category: "daily" }
         ];
 
         const todoData = {
@@ -641,23 +688,29 @@
             preTrip: ["買旅遊保險", "網上 Check-in", "預約 Wifi 蛋"]
         };
 
+        // --- Login Logic ---
+        function checkLogin() {
+            const acc = document.getElementById('login-acc').value;
+            const pw = document.getElementById('login-pw').value;
+            if (acc === 'avap1008' && pw === 'trying1210') {
+                document.getElementById('login-screen').style.display = 'none';
+                username = "Ava"; // Default name for this user
+                document.getElementById('display-username').innerText = username;
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             updateTime();
             setInterval(updateTime, 60000);
             renderDateTabs();
-            renderTimeline("2023-10-25"); // Default to first day
+            renderTimeline("2023-10-25");
             renderShoppingList();
             renderTodoList();
+            renderExpenses();
             initChart();
-            
-            // Check if today is in trip
-            const today = new Date().toISOString().split('T')[0];
-            if(itineraryData[today]) {
-                renderTimeline(today);
-                document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
-                // Logic to highlight today's tab would go here
-            }
         });
 
         // --- Navigation ---
@@ -666,40 +719,42 @@
             document.getElementById('view-' + viewId).classList.add('active');
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            navElement.classList.add('active');
+            if(navElement) navElement.classList.add('active');
         }
 
         // --- Settings & Theme ---
-        function promptUserName() {
-            const newName = prompt("請輸入您的名稱:", username);
-            if (newName) {
-                username = newName;
-                document.getElementById('display-username').innerText = username;
-            }
+        function openSettingsModal() {
+            document.getElementById('setting-username-input').value = username;
+            document.getElementById('modal-settings').style.display = 'flex';
+        }
+
+        function saveSettings() {
+            username = document.getElementById('setting-username-input').value;
+            document.getElementById('display-username').innerText = username;
+            closeModal('modal-settings');
         }
 
         function setTheme(theme) {
             currentTheme = theme;
             document.body.className = theme === 'fancy' ? 'fancy-mode' : '';
-            // Re-render chart to match theme colors if needed
         }
 
         // --- Time ---
         function updateTime() {
             const now = new Date();
             
-            // HK Time
+            // HK Time for Overview
             const hkTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Hong_Kong' });
             const hkDate = now.toLocaleDateString('zh-HK', { month: '2-digit', day: '2-digit', timeZone: 'Asia/Hong_Kong' });
-            document.getElementById('time-hkg').innerText = hkTime;
-            document.getElementById('date-hkg').innerText = hkDate;
+            document.getElementById('hk-time-big').innerText = hkTime;
+            document.getElementById('hk-date-small').innerText = hkDate;
 
-            // Local Time (Simulated as Tokyo +1 hour from HK)
-            const localDateObj = new Date(now.getTime() + (1 * 60 * 60 * 1000)); 
-            const localTime = localDateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }); // Simplified
-            const localDate = localDateObj.toLocaleDateString('zh-HK', { month: '2-digit', day: '2-digit', timeZone: 'UTC' });
-            document.getElementById('time-local').innerText = localTime;
-            document.getElementById('date-local').innerText = localDate;
+            // Destination Time (Tokyo +1) for Itinerary Header
+            const destDateObj = new Date(now.getTime() + (1 * 60 * 60 * 1000)); 
+            const destTime = destDateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+            const destDate = destDateObj.toLocaleDateString('zh-HK', { month: 'long', day: 'numeric', weekday: 'short', timeZone: 'UTC' });
+            document.getElementById('dest-time').innerText = destTime;
+            document.getElementById('dest-date').innerText = destDate;
         }
 
         // --- Itinerary Logic ---
@@ -709,7 +764,7 @@
             Object.keys(itineraryData).forEach((date, index) => {
                 const div = document.createElement('div');
                 div.className = `date-tab ${index === 0 ? 'active' : ''}`;
-                div.innerText = `Day ${index + 1} (${date.slice(5)})`;
+                div.innerText = `Day ${index + 1}`;
                 div.onclick = () => {
                     document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
                     div.classList.add('active');
@@ -769,22 +824,12 @@
             document.getElementById('field-transport').style.display = type === 'transport' ? 'block' : 'none';
         }
 
-        function openAddItineraryModal() {
-            document.getElementById('modal-itinerary').style.display = 'flex';
-        }
-        
+        function openAddItineraryModal() { document.getElementById('modal-itinerary').style.display = 'flex'; }
         function openDetailModal(title) {
             document.getElementById('detail-title').innerText = title;
             document.getElementById('modal-detail').style.display = 'flex';
         }
-
-        function saveItinerary() {
-            alert("行程已新增 (前端演示)");
-            closeModal('modal-itinerary');
-            // Logic to add to itineraryData would go here
-            // Also trigger auto-generate todo item
-            addNewTodoItem("luggage", "根據新行程建議物品");
-        }
+        function saveItinerary() { alert("行程已新增"); closeModal('modal-itinerary'); }
 
         // --- Shopping List Logic ---
         function renderShoppingList() {
@@ -793,26 +838,34 @@
             container.innerHTML = '';
 
             let sortedList = [...shoppingList];
+            
+            // Debug Fix: Sorting Logic
             if (sortType === 'status') {
-                sortedList.sort((a, b) => (a.status === 'bought' ? 1 : -1));
+                // Sort Pending first, Bought last
+                sortedList.sort((a, b) => {
+                    if (a.status === b.status) return 0;
+                    return a.status === 'bought' ? 1 : -1;
+                });
             } else if (sortType === 'location') {
                 sortedList.sort((a, b) => a.location.localeCompare(b.location));
             }
 
             sortedList.forEach(item => {
                 const div = document.createElement('div');
-                div.className = `shopping-item ${item.status === 'bought' ? 'bought' : ''}`;
+                const isBought = item.status === 'bought';
+                div.className = `shopping-item ${isBought ? 'bought' : ''}`;
+                
+                // Toggle expand only if bought
                 div.onclick = (e) => {
-                    // Toggle expand only if bought to show image
-                    if(item.status === 'bought') {
-                        div.classList.toggle('expanded');
-                    }
+                    if(isBought) div.classList.toggle('expanded');
                 };
 
-                const statusIcon = item.status === 'bought' ? '<i class="fa-solid fa-circle-check" style="color:green"></i>' : '<i class="fa-regular fa-circle"></i>';
+                const statusIcon = isBought ? 
+                    '<i class="fa-solid fa-circle-check" style="color:green"></i>' : 
+                    '<i class="fa-regular fa-circle" style="color:#ccc"></i>';
                 
                 div.innerHTML = `
-                    <div style="margin-right: 15px;">${statusIcon}</div>
+                    <div style="margin-right: 15px; cursor:pointer;" onclick="toggleShopStatus(${item.id}, event)">${statusIcon}</div>
                     <div class="item-details">
                         <strong>${item.name}</strong>
                         <div style="font-size: 0.8rem; color: #666;">
@@ -826,6 +879,15 @@
                 `;
                 container.appendChild(div);
             });
+        }
+
+        function toggleShopStatus(id, event) {
+            event.stopPropagation(); // Prevent card expansion when clicking check
+            const item = shoppingList.find(i => i.id === id);
+            if(item) {
+                item.status = item.status === 'bought' ? 'pending' : 'bought';
+                renderShoppingList(); // Re-render to update order and style
+            }
         }
 
         function openAddShoppingModal() {
@@ -861,10 +923,22 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
+                    plugins: { legend: { position: 'bottom' } }
                 }
+            });
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expense-history-list');
+            list.innerHTML = '';
+            expenseHistory.forEach(ex => {
+                const div = document.createElement('div');
+                div.className = 'expense-row';
+                div.innerHTML = `
+                    <span>${ex.name} <small style="color:#999">(${ex.category})</small></span>
+                    <strong>$${ex.amount}</strong>
+                `;
+                list.appendChild(div);
             });
         }
 
@@ -879,12 +953,14 @@
 
         function addExpense() {
             const amount = parseInt(document.getElementById('expense-amount').value);
+            const cat = document.getElementById('expense-category').value;
             if(amount) {
                 expenses += amount;
+                expenseHistory.unshift({ name: "新增支出", amount: amount, category: cat });
                 document.getElementById('used-budget-display').innerText = "$" + expenses.toLocaleString();
                 document.getElementById('expense-amount').value = '';
                 updateChart();
-                alert("已記帳");
+                renderExpenses();
             }
         }
 
@@ -897,46 +973,29 @@
         function renderTodoList() {
             const luggageContainer = document.getElementById('luggage-list');
             luggageContainer.innerHTML = todoData.luggage.map(item => createTodoHTML(item)).join('');
-
             const preTripContainer = document.getElementById('pre-trip-list');
             preTripContainer.innerHTML = todoData.preTrip.map(item => createTodoHTML(item)).join('');
         }
 
         function createTodoHTML(text) {
-            return `
-                <div class="todo-item">
-                    <input type="checkbox">
-                    <span>${text}</span>
-                </div>
-            `;
+            return `<div class="todo-item"><input type="checkbox"><span>${text}</span></div>`;
         }
 
         function addNewTodo() {
             const input = document.getElementById('new-todo-input');
             if(input.value) {
-                addNewTodoItem('preTrip', input.value); // Default add to pre-trip
+                const div = document.createElement('div');
+                div.className = 'todo-item';
+                div.innerHTML = `<input type="checkbox"><span>${input.value}</span>`;
+                document.getElementById('pre-trip-list').appendChild(div);
                 input.value = '';
             }
         }
 
-        function addNewTodoItem(category, text) {
-            const container = category === 'luggage' ? document.getElementById('luggage-list') : document.getElementById('pre-trip-list');
-            const div = document.createElement('div');
-            div.className = 'todo-item';
-            div.innerHTML = `<input type="checkbox"><span>${text}</span>`;
-            container.appendChild(div);
-        }
-
         // --- Utils ---
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        // Close modal when clicking outside
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
+            if (event.target.classList.contains('modal')) event.target.style.display = "none";
         }
     </script>
 </body>
